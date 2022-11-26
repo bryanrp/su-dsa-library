@@ -38,7 +38,7 @@ bool BookManager::create_book(const Book& book) {
 
 }
 
-bool BookManager::add_book_stock(int serial, int amount) {
+bool BookManager::update_book(int old_serial, const Book& book) {
 
 }
 
@@ -46,11 +46,11 @@ bool BookManager::delete_book(int serial) {
 
 }
 
-bool BookManager::remove_book_stock(int serial, int amount) {
+bool BookManager::add_book_stock(int serial, int amount) {
 
 }
 
-bool BookManager::update_book(int old_serial, const Book& book) {
+bool BookManager::remove_book_stock(int serial, int amount) {
 
 }
 

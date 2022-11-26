@@ -20,13 +20,11 @@ public:
     Book get_book_by_serial(int serial) const;
 
     bool create_book(const Book& book);
-    bool add_book_stock(int serial, int amount);
-
-    bool delete_book(int serial);
-    bool remove_book_stock(int serial, int amount);
-
     bool update_book(int old_serial, const Book& book);
+    bool delete_book(int serial);
 
+    bool add_book_stock(int serial, int amount);
+    bool remove_book_stock(int serial, int amount);
     bool borrow_book(int serial, int amount);
     bool return_book(int serial, int amount);
 };

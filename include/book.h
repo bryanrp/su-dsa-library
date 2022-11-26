@@ -10,6 +10,7 @@ private:
     string name;
     int num_of_available_books;
     int num_of_borrowed_books;
+
 public:
     Book();
     Book(const Book& book);
