@@ -107,17 +107,114 @@ bool BPlusTree<K, V>::remove_helper(Node *current, K key) {
 
 template<typename K, typename V>
 void BPlusTree<K, V>::steal_left(Node *current, Node *left) {
+    if (current->parent != left->parent || current->parent == nullptr) {
+        assert(false);
+    }
 
+    K left_key = left->keys[left->cnt_key-1];
+    V *left_value = left->values[left->cnt_key-1];
+    Node *left_child = left->children[left->cnt_key];
+    left->remove(left->cnt_key-1);
+
+    int position_parent = 0;
+    Node *p = current->parent;
+    for (int i = 0; i < p->cnt_key; i++) {
+        if (left == p->children[i]) {
+            position_parent = i;
+            break;
+        }
+    }
+    K p_key = p->keys[position_parent];
+
+    p->keys[position_parent] = left_key; // fix the parent keys
+    if (current->is_leaf) current->insert(left_key, left_value, left_child, current->children[0]);
+    else {
+        current->insert(p_key, nullptr, left_child, current->children[0]);
+        left_child->parent = current;
+    }
 }
 
 template<typename K, typename V>
 void BPlusTree<K, V>::steal_right(Node *current, Node *right) {
+    if (current->parent != right->parent || current->parent == nullptr) {
+        assert(false);
+    }
 
+    K right_key = right->keys[0];
+    V *right_value = right->values[0];
+    Node *right_child = right->children[0];
+    right->remove(0, true);
+
+    int position_parent = 0;
+    Node *p = current->parent;
+    for (int i = 0; i < p->cnt_key; i++) {
+        if (current == p->children[i]) {
+            position_parent = i;
+            break;
+        }
+    }
+    K p_key = p->keys[position_parent];
+
+    if (current->is_leaf) p->keys[position_parent] = right->keys[0];
+    else p->keys[position_parent] = right_key;
+    // no need to fix p->keys[position_parent - 1] since if we need to fix it, then it will be fixed later by insert_fix
+    if (current->is_leaf) current->insert(right_key, right_value, current->children[0], right_child);
+    else {
+        current->insert(p_key, nullptr, current->children[current->cnt_key], right_child);
+        right_child->parent = current;
+    }
 }
 
 template<typename K, typename V>
 void BPlusTree<K, V>::merge(Node *left, Node *right) {
+    if (left->parent != right->parent || left->parent == nullptr) {
+        assert(false);
+    }
 
+    Node *p = left->parent;
+    int parent_position;
+    for (int i = 0; i < p->cnt_key; i++) {
+        if (p->children[i] == left) {
+            assert(p->children[i+1] == right);
+            parent_position = i;
+            break;
+        }
+    }
+    K temp_key = p->keys[parent_position];
+    p->remove(parent_position);
+
+    Node *merged_node = new Node(degree);
+    merged_node->parent = p;
+    merged_node->is_leaf = left->is_leaf;
+
+    if (merged_node->is_leaf) {
+        merged_node->prev_leaf = left->prev_leaf;
+        merged_node->next_leaf = right->next_leaf;
+        if (left->prev_leaf != nullptr) left->prev_leaf->next_leaf = merged_node;
+        if (right->next_leaf != nullptr) right->next_leaf->prev_leaf = merged_node;
+    }
+
+    for (int i = 0; i < left->cnt_key; i++) {
+        merged_node->insert(left->keys[i], left->values[i], left->children[i], left->children[i+1]);
+        if (!merged_node->is_leaf) {
+            left->children[i]->parent = merged_node;
+            left->children[i+1]->parent = merged_node;
+        }
+    }
+    if (!merged_node->is_leaf) {
+        merged_node->insert(temp_key, nullptr, left->children[left->cnt_key], right->children[0]);
+        left->children[left->cnt_key]->parent = merged_node; // might be left out.
+        right->children[0]->parent = merged_node; // might be left out. ex: when right->cnt_key = 0, then the next loops won't be run
+    }
+    for (int i = 0; i < right->cnt_key; i++) {
+        merged_node->insert(right->keys[i], right->values[i], right->children[i], right->children[i+1]);
+        if (!merged_node->is_leaf) {
+            right->children[i]->parent = merged_node;
+            right->children[i+1]->parent = merged_node;
+        }
+    }
+
+    p->children[parent_position] = merged_node;
 }
 
 template<typename K, typename V>
