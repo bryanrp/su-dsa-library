@@ -168,7 +168,13 @@ bool BPlusTree<K, V>::insert(K key, const V &value) {
 
 template<typename K, typename V>
 bool BPlusTree<K, V>::remove(K key) {
-
+    if (remove_helper(root, key)) {
+        size--;
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 template<typename K, typename V>
