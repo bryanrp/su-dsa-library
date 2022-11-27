@@ -8,7 +8,40 @@ class BPlusTree {
 private:
     class Node {
     public:
-        
+        int m;
+        int cnt_key;
+        Node *parent;
+        K *keys;
+        Node **children;
+        V **values;
+        bool is_leaf;
+        Node *next_leaf;
+        Node *prev_leaf;
+
+        Node(int _m) {
+
+        }
+
+        // return the position of the to be inserted key. or the position of the first key that is >= key argument
+        int get_insert_position(K key) {
+
+        }
+
+        void insert(K key, V* value, Node *left_child, Node *right_child) {
+
+        }
+
+        void remove(int position, bool delete_left_child = false) {
+
+        }
+
+        Node* get_left_sibling() { // return nullptr if not exist
+
+        }
+
+        Node* get_right_sibling() { // return nullptr if not exist
+
+        }
     };
 
     int degree;
