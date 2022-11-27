@@ -238,7 +238,76 @@ void BPlusTree<K, V>::merge(Node *left, Node *right) {
 
 template<typename K, typename V>
 void BPlusTree<K, V>::remove_fix(Node *current, K key) {
+    if (current == nullptr) {
+        assert(false);
+    }
 
+    while (current != nullptr) {
+        int position = current->get_insert_position(key);
+        if (current == root) {
+            if (current->is_leaf) {
+                current->remove(position);
+            }
+            else {
+                if (current->cnt_key == 0) {
+                    assert(current->children[0] != nullptr);
+                    root = current->children[0];
+                }
+            }
+            break;
+        }
+        else {
+            if (position < current->cnt_key && key == current->keys[position]) { // key exists
+                if (current->is_leaf) {
+                    current->remove(position);
+                    if (current->cnt_key < (degree-1)/2) { // underflow, need to fix
+                        Node *left_sibling = current->get_left_sibling();
+                        Node *right_sibling = current->get_right_sibling();
+                        if (left_sibling != nullptr && left_sibling->cnt_key > (degree-1)/2) {
+                            steal_left(current, left_sibling);
+                        }
+                        else if (right_sibling != nullptr && right_sibling->cnt_key > (degree-1)/2) {
+                            steal_right(current, right_sibling);
+                        }
+                        else if (left_sibling != nullptr) { // merge with left sibling
+                            merge(left_sibling, current);
+                        }
+                        else if (right_sibling != nullptr) { // merge with right sibling
+                            merge(current, right_sibling);
+                        }
+                        else {
+                            assert(false);
+                        }
+                    }
+                }
+                else {
+                    // uncomment to avoid nonexistent key in internal node
+                    // current->keys[position] = get_minimum_key(current->children[position+1]);
+                }
+            }
+
+            if (!current->is_leaf && current->cnt_key < (degree-1)/2) {
+                Node *left_sibling = current->get_left_sibling();
+                Node *right_sibling = current->get_right_sibling();
+                if (left_sibling != nullptr && left_sibling->cnt_key > (degree-1)/2) {
+                    steal_left(current, left_sibling);
+                }
+                else if (right_sibling != nullptr && right_sibling->cnt_key > (degree-1)/2) {
+                    steal_right(current, right_sibling);
+                }
+                else if (left_sibling != nullptr) { // merge with left sibling
+                    merge(left_sibling, current);
+                }
+                else if (right_sibling != nullptr) {
+                    merge(current, right_sibling);
+                }
+                else {
+                    assert(false);
+                }
+            }
+        }
+        current = current->parent;
+    }
 }
 
 template<typename K, typename V>
