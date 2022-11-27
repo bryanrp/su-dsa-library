@@ -85,7 +85,13 @@ V* BPlusTree<K, V>::get_value(K key) const {
 
 template<typename K, typename V>
 bool BPlusTree<K, V>::insert(K key, const V &value) {
-
+    if (insert_helper(root, key, new V(value))) {
+        size++;
+        return true;
+    }
+    else {
+        return false;
+    }
 }
 
 template<typename K, typename V>
