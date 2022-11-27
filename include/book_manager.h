@@ -6,7 +6,8 @@ using namespace std;
 
 class BookManager {
 private:
-    BPlusTree<int, Book> data;
+    BPlusTree<string, Book> data;
+
 public:
     BookManager();
     BookManager(const string& file_location);
@@ -17,14 +18,14 @@ public:
 
     // returns a copy of the book
     vector<Book> get_all_books() const;
-    Book get_book_by_serial(int serial) const;
+    Book get_book_by_isbn(string isbn) const;
 
     bool create_book(const Book& book);
-    bool update_book(int old_serial, const Book& book);
-    bool delete_book(int serial);
+    bool delete_book(string isbn);
+    bool update_book(string old_isbn, const Book& book);
 
-    bool add_book_stock(int serial, int amount);
-    bool remove_book_stock(int serial, int amount);
-    bool borrow_book(int serial, int amount);
-    bool return_book(int serial, int amount);
+    bool add_book_stock(string isbn, int amount);
+    bool remove_book_stock(string isbn, int amount);
+    bool borrow_book(string isbn, int amount);
+    bool return_book(string isbn, int amount);
 };
