@@ -102,7 +102,26 @@ void BPlusTree<K, V>::insert_fix(Node *current, K key, V *value) {
 
 template<typename K, typename V>
 bool BPlusTree<K, V>::remove_helper(Node *current, K key) {
+    if (current == nullptr) { // unexpected case
+        assert(false);
+    }
 
+    if (current->is_leaf) {
+        int position = current->get_insert_position(key);
+        if (position >= current->cnt_key || current->keys[position] != key) { // no such key
+            return false;
+        }
+        remove_fix(current, key);
+        return true;
+    }
+    else {
+        for (int i = 0; i < current->cnt_key; i++) {
+            if (key < current->keys[i]) {
+                return remove_helper(current->children[i], key);
+            }
+        }
+        return remove_helper(current->children[current->cnt_key], key);
+    }
 }
 
 template<typename K, typename V>
