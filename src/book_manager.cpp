@@ -1,4 +1,6 @@
 #pragma once
+#include <fstream>
+#include <sstream>
 #include "../include/book_manager.h"
 #include "bplustree.cpp"
 #include "book.cpp"
@@ -17,12 +19,25 @@ BookManager::BookManager(const string& file_location)
 
 void BookManager::load_data(const string& file_location) 
 {
-	
+	ifstream input(file_location);
+    stringstream buffer;
+    buffer << input.rdbuf();
+    json::JSON obj = json::JSON::Load(buffer.str());
+
+    for (int i = 0; i < obj.length(); i++) {
+        create_book(Book(obj[i]));
+    }
 }
 
 void BookManager::save_data(const string& file_location) 
 {
-    
+    json::JSON obj = json::Array();
+    vector<Book> books = get_all_books();
+    for (int i = 0; i < books.size(); i++) {
+        obj.append(books[i].get_json());
+    }
+    ofstream output(file_location);
+    output << obj.dump();
 }
 
 int BookManager::get_num_of_books() 
