@@ -23,7 +23,13 @@ Book::Book(const Book& book) {
 }
 
 Book::Book(json::JSON obj) {
-    
+    isbn = obj["isbn"].ToString();
+    title = obj["title"].ToString();
+    author = obj["author"].ToString();
+    publisher = obj["publisher"].ToString();
+    year = obj["year"].ToInt();
+    num_of_available_books = obj["avail"].ToInt();
+    num_of_borrowed_books = obj["borrow"].ToInt();
 }
 
 string Book::get_isbn() const {
@@ -55,7 +61,15 @@ int Book::get_num_of_borrowed_books() const {
 }
 
 json::JSON Book::get_json() const {
-    
+    json::JSON obj;
+    obj["isbn"] = isbn;
+    obj["title"] = title;
+    obj["author"] = author;
+    obj["publisher"] = publisher;
+    obj["year"] = year;
+    obj["avail"] = num_of_available_books;
+    obj["borrow"] = num_of_borrowed_books;
+    return obj;
 }
 
 void Book::set_isbn(string _isbn) {
