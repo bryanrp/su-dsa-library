@@ -3,13 +3,59 @@
 #include "../include/bplustree.h"
 
 template<typename K, typename V>
-K BPlusTree<K, V>::get_minimum_key(Node *current) {
-
+K BPlusTree<K, V>::get_minimum_key(Node *current) 
+{
+	if (current == nullptr)
+	{
+		assert(false);
+	}
+	
+	while (current != nullptr && !current->is_leaf)
+	{
+		current = current->children[0];
+	}
+	
+	if (current == nullptr)
+	{
+		assert(false);
+	}
+	
+	return current->keys[0];
 }
 
 template<typename K, typename V>
-bool BPlusTree<K, V>::is_exist_helper(Node *current, K key) const {
-
+bool BPlusTree<K, V>::is_exist_helper(Node *current, K key) const 
+{
+	if (current == nullptr)
+	{
+		return false;
+	}
+	
+	if (current ->is_leaf)
+	{
+		for (int i = 0; i < current->cnt_key; i++)
+		{
+			if (key == current->keys[i])
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
+	
+	else
+	{
+		for (int i = 0; i < current->cnt_key; i++)
+		{
+			if (key < current->keys[i])
+			{
+				return is_exist_helper(current->children[i], key);
+			}
+		}
+		
+		return is_exist_helper(current->children[current->cnt_key], key);
+	}
 }
 
 template<typename K, typename V>
@@ -326,18 +372,21 @@ BPlusTree<K, V>::BPlusTree(int _degree) {
 }
 
 template<typename K, typename V>
-int BPlusTree<K, V>::get_size() const {
-
+int BPlusTree<K, V>::get_size() const 
+{
+	return size;
 }
 
 template<typename K, typename V>
-bool BPlusTree<K, V>::is_exist(K key) const {
-
+bool BPlusTree<K, V>::is_exist(K key) const 
+{
+	return is_exist_helper(root, key);
 }
 
 template<typename K, typename V>
-V* BPlusTree<K, V>::get_value(K key) const {
-
+V* BPlusTree<K, V>::get_value(K key) const 
+{
+	return get_value_helper(root, key);
 }
 
 template<typename K, typename V>
