@@ -4,14 +4,16 @@
 #include <list>
 #include <regex>
 #include <vector>
-#include "include/book.h"
 #include "include/book_manager.h"
 #include "include/user_manager.h"
-#include "src/book.cpp"
 #include "src/book_manager.cpp"
 #include "src/user_manager.cpp"
 using namespace std;
 
+const string book_file_path = "books.json";
+const string user_file_path = "users.json";
+BookManager book_manager;
+UserManager user_manager(user_file_path);
 list<string> history;
 
 int read_input_integer(int min, int max) {
@@ -85,13 +87,13 @@ string cut_string(string str, int max_length) {
 
 void display_book(const Book& book) {
     cout << "Book information:\n";
-    cout << "\tISBN:                 " << book.get_isbn() << '\n';
-    cout << "\tTitle:                " << book.get_title() << '\n';
-    cout << "\tAuthor:               " << book.get_author() << '\n';
-    cout << "\tPublisher:            " << book.get_publisher() << '\n';
-    cout << "\tYear:                 " << book.get_year() << '\n';
+    cout << "\tISBN                : " << book.get_isbn() << '\n';
+    cout << "\tTitle               : " << book.get_title() << '\n';
+    cout << "\tAuthor              : " << book.get_author() << '\n';
+    cout << "\tPublisher           : " << book.get_publisher() << '\n';
+    cout << "\tYear                : " << book.get_year() << '\n';
     cout << "\t# of available books: " << book.get_num_of_available_books() << '\n';
-    cout << "\t# of borrowed books:  " << book.get_num_of_borrowed_books() << '\n';
+    cout << "\t# of borrowed books : " << book.get_num_of_borrowed_books() << '\n';
 }
 
 void display_multiple_books(const vector<Book>& books, int books_per_page = 10) {
@@ -137,21 +139,73 @@ void display_multiple_books(const vector<Book>& books, int books_per_page = 10) 
     }
 }
 
-// option_start is the user choice option starting number. this parameter is used to reduce code duplicate. (option_start-1) for back to menu
-// set option = -1 if you want to output the user option navigation and ask user to input option
-void update_book(BookManager& book_manager, int option_start, int option = -1) {
-    if (option < 0) {
-        cout << "Update book:\n";
-        cout << option_start+0 << ". Add book stock\n";
-        cout << option_start+1 << ". Modify book\n";
-        cout << option_start+2 << ". Delete existing book\n";
-        cout << option_start+3 << ". Remove book stock\n";
-        cout << option_start+4 << ". Borrow book\n";
-        cout << option_start+5 << ". Return book\n";
-        cout << option_start-1 << ". Back to main menu.\n";
-        cout << "Choose operation to do: ";
-        option = read_input_integer(option_start-1, option_start+5);
+void display_user(User user) {
+    cout << "User information:\n";
+    cout << "\tUsername         : " << user.get_name() << '\n';
+    cout << "\tPassword         : " << user.get_password() << '\n';
+    cout << "\tPhone number     : " << user.get_phone() << '\n';
+    list<string> borrowed_books = user.get_borrowed_books();
+    if (borrowed_books.empty()) {
+        cout << "No books borrowed\n";
     }
+    else {
+        cout << "\tCurrently borrows: ";
+        for (list<string>::iterator it = borrowed_books.begin(); it != borrowed_books.end(); it++) {
+            if (it != borrowed_books.begin()) cout << ", ";
+            cout << *it;
+        }
+        cout << '\n';
+    }
+}
+
+void display_multiple_users(const vector<User>& users, int users_per_page = 10) {
+    if (users.empty()) {
+        cout << "No user.\n";
+    }
+    else {
+        int max_page = (users.size() + users_per_page - 1) / users_per_page;
+        int page = 0;
+        do {
+            system("cls");
+            cout << setw(23) << "Name"
+                << setw(15) << "Password"
+                << setw(15) << "Phone"
+                << setw(20) << "# of borrowed books"
+                << '\n';
+
+            int num_of_displayed_users = 0;
+            for (int i = page * users_per_page, j = 0; i+j < users.size() && j < users_per_page; j++) {
+                string cut_name = cut_string(users[i+j].get_name(), 20);
+                string cut_password = cut_string(users[i+j].get_password(), 12);
+                string cut_phone = cut_string(users[i+j].get_phone(), 12);
+                cout << setw(23) << cut_name
+                     << setw(15) << cut_password
+                     << setw(15) << cut_phone
+                     << setw(20) << users[i+j].get_borrowed_books().size()
+                     << '\n';
+                num_of_displayed_users++;
+            }
+            cout << "Showing " << num_of_displayed_users << " out of " << users.size() << " users. ";
+            cout << "Page " << page+1 << " out of " << max_page << ".\n";
+            
+            cout << "Go to page (input 0 to stop moving between pages): ";
+            page = read_input_integer(0, max_page);
+            page--;
+        } while (page != -1);
+    }
+}
+
+void update_book() {
+    cout << "Update book:\n";
+    cout << "1. Add book stock\n";
+    cout << "2. Modify book\n";
+    cout << "3. Delete existing book\n";
+    cout << "4. Remove book stock\n";
+    cout << "5. Create new book\n";
+    cout << "0. Back to main menu.\n";
+    cout << "Choose operation to do: ";
+    int option = read_input_integer(0, 5);
+
     if (option == 0) {
         return;
     }
@@ -159,12 +213,10 @@ void update_book(BookManager& book_manager, int option_start, int option = -1) {
     string isbn;
     while (true) {
         const string cancel_operation = "(-1 to cancel operation)";
-        if (option == option_start) cout << "Input book ISBN to be added stock " + cancel_operation + ": ";
-        else if (option == option_start+1) cout << "Input ISBN to be modified " + cancel_operation + ": ";
-        else if (option == option_start+2) cout << "Input book ISBN to be deleted " + cancel_operation + ": ";
-        else if (option == option_start+3) cout << "Input book ISBN to be removed stock " + cancel_operation + ": ";
-        else if (option == option_start+4) cout << "Input book ISBN to be borrowed " + cancel_operation + ": ";
-        else if (option == option_start+5) cout << "Input book ISBN to be returned " + cancel_operation + ": ";
+        if (option == 1) cout << "Input book ISBN to be added stock " + cancel_operation + ": ";
+        else if (option == 2) cout << "Input ISBN to be modified " + cancel_operation + ": ";
+        else if (option == 3) cout << "Input book ISBN to be deleted " + cancel_operation + ": ";
+        else if (option == 4) cout << "Input book ISBN to be removed stock " + cancel_operation + ": ";
 
         isbn = read_input_line();
         if (isbn == "-1") {
@@ -182,9 +234,9 @@ void update_book(BookManager& book_manager, int option_start, int option = -1) {
         }
     }
 
-    if (option == option_start) {
+    if (option == 1) {
         cout << "Input the amount of book stocks to be added: ";
-        int amount = read_input_integer(1, INT_MAX);
+        int amount = read_input_integer(0, INT_MAX);
         if (book_manager.add_book_stock(isbn, amount)) {
             cout << "Successfully added book stocks.\n";
             display_book(book_manager.get_book_by_isbn(isbn));
@@ -194,7 +246,7 @@ void update_book(BookManager& book_manager, int option_start, int option = -1) {
             cout << "Failed to add book stocks.\n";
         }
     }
-    else if (option == option_start+1) {
+    else if (option == 2) {
         cout << "Fill these values to modify the old book's data.\n";
         Book new_book = read_input_book();
 
@@ -207,7 +259,7 @@ void update_book(BookManager& book_manager, int option_start, int option = -1) {
             cout << "Failed to modify book.\n";
         }
     }
-    else if (option == option_start+2) {
+    else if (option == 3) {
         cout << "Are you sure to delete book? (y/n) ";
         string response = read_input_line();
         if (response == "y") {
@@ -220,7 +272,7 @@ void update_book(BookManager& book_manager, int option_start, int option = -1) {
             }
         }
     }
-    else if (option == option_start+3) {
+    else if (option == 4) {
         cout << "Input the amount of book stocks to be removed: ";
         int amount = read_input_integer(1, INT_MAX);
         if (book_manager.remove_book_stock(isbn, amount)) {
@@ -232,34 +284,21 @@ void update_book(BookManager& book_manager, int option_start, int option = -1) {
             cout << "Failed to remove book stocks.\n";
         }
     }
-    else if (option == option_start+4) {
-        cout << "Input the amount of books to be borrowed: ";
-        int amount = read_input_integer(1, INT_MAX);
-        if (book_manager.borrow_book(isbn, amount)) {
-            cout << "Borrow successful.\n";
-            display_book(book_manager.get_book_by_isbn(isbn));
-            history.push_back("Borrowed " + to_string(amount) + " books with ISBN " + isbn + "\n");
+    else if (option == 5) {
+        cout << "Fill these values for the new book.\n";
+        Book book = read_input_book();
+        if (book_manager.create_book(book)) {
+            cout << "Created a new book.\n";
+            display_book(book_manager.get_book_by_isbn(book.get_isbn()));
+            history.push_back("Created new book with ISBN " + book.get_isbn() + " - " + book.get_title() + "\n");
         }
         else {
-            cout << "Borrow failed.\n";
-        }
-    }
-    else if (option == option_start+5) {
-        cout << "Input the amount of books to be returned: ";
-        int amount = read_input_integer(1, INT_MAX);
-        if (book_manager.return_book(isbn, amount)) {
-            cout << "Return successful.\n";
-            display_book(book_manager.get_book_by_isbn(isbn));
-            history.push_back("Returned " + to_string(amount) + " books with ISBN " + isbn + "\n");
-        }
-        else {
-            cout << "Return failed.\n";
+            cout << "Failed to create a new book. Make sure that the ISBN must be unique.\n";
         }
     }
 }
 
-void search_book(BookManager& book_manager, bool can_update = false) {
-    system("cls");
+void search_book() {
     cout << "Search book\n";
     cout << "1. Show all books\n";
     cout << "2. Search book by ISBN\n";
@@ -328,12 +367,81 @@ void search_book(BookManager& book_manager, bool can_update = false) {
             display_multiple_books(result);
         }
     }
+}
 
-    if (can_update) {
-        cout << "Do you want to update a book? (y/n) ";
-        string response = read_input_line();
-        if (response == "y") {
-            update_book(book_manager, 1);
+void search_user() {
+    cout << "Search user\n";
+    cout << "1. Show all users\n";
+    cout << "2. Search by name\n";
+    cout << "0. Go back\n";
+    cout << "Choose operation to do: ";
+    int option = read_input_integer(0, 2);
+    if (option == 0) {
+        return;
+    }
+    else if (option == 1) {
+        display_multiple_users(user_manager.get_all_users());
+    }
+    else if (option == 2) {
+        cout << "Input user name: (-1 to cancel) ";
+        string name = read_input_line();
+        if (name == "-1") {
+            return;
+        }
+        else {
+            display_user(user_manager.get_user_by_name(name));
+        }
+    }
+}
+
+void borrow_return_book(string name) {
+    cout << "1. Borrow book\n";
+    cout << "2. Return book\n";
+    cout << "0. Cancel operation\n";
+    cout << "Choose operation to do: ";
+    int option = read_input_integer(0, 2);
+    if (option == 0) {
+        return;
+    }
+    else if (option == 1) {
+        cout << "Input ISBN: ";
+        string isbn = read_input_line();
+        if (book_manager.borrow_book(isbn, 1)) {
+            if (user_manager.borrow_book(name, isbn)) {
+                cout << "Borrowed book with ISBN " << isbn << '\n';
+                history.push_back(name + " borrowed a book with ISBN " + isbn + "\n");
+            }
+            else {
+                assert(false);
+            }
+        }
+        else {
+            cout << "Failed to borrow book. Make sure that there are available books and you typed the correct ISBN.\n";
+        }
+    }
+    else if (option == 2) {
+        list<string> books = user_manager.get_user_by_name(name).get_borrowed_books();
+        if (books.empty()) {
+            cout << "No book borrowed\n";
+        }
+        else {
+            int i = 0;
+            for (string isbn : books) {
+                cout << ++i << ". " << isbn << '\n';
+            }
+            cout << "Input which book to return (0 to cancel): ";
+            int number = read_input_integer(0, books.size());
+            if (number == 0) return;
+            i = 0;
+            for (list<string>::iterator it = books.begin(); it != books.end(); it++) {
+                if (++i == number) {
+                    assert(book_manager.return_book(*it, 1));
+                    cout << "Returned book with ISBN " << *it << '\n';
+                    history.push_back(name + " returned a book with ISBN " + *it + "\n");
+                    assert(user_manager.return_book(name, *it));
+                    break;
+                }
+            }
         }
     }
 }
@@ -380,55 +488,48 @@ void display_history() {
     }
 }
 
-void admin_main_menu(string file_location) {
-    cout << "Loading data...\n";
-    BookManager book_manager(file_location);
-
+void admin_main_menu() {
     while (true) {
         system("cls");
         cout << "Library Management System\n";
         cout << "Main Menu\n";
         cout << "1. Search book\n";
-        cout << "2. Create new book\n";
-        cout << "3. Add book stock\n";
-        cout << "4. Modify book\n";
-        cout << "5. Delete existing book\n";
-        cout << "6. Remove book stock\n";
-        cout << "7. Borrow book\n";
-        cout << "8. Return book\n";
-        cout << "9. Show history\n";
-        cout << "0. Save and log out\n";
-
+        cout << "2. Update book database\n";
+        cout << "3. Search user\n";
+        cout << "4. Show history\n";
+        cout << "0. Log out\n";
         cout << "Choose operation to do: ";
-        int option = read_input_integer(0, 9);
+        int option = read_input_integer(0, 4);
+        
         if (option == 0) {
-            cout << "Do you want to save? (y/n) ";
+            cout << "Do you want to log out? (y/n) ";
             string response = read_input_line();
             if (response == "y") {
-                cout << "Saving data...\n";
-                book_manager.save_data(file_location);
-            }
-            return;
-        }
-        else if (option == 1) {
-            search_book(book_manager, true);
-        }
-        else if (option == 2) {
-            cout << "Fill these values for the new book.\n";
-            Book book = read_input_book();
-            if (book_manager.create_book(book)) {
-                cout << "Created a new book.\n";
-                display_book(book_manager.get_book_by_isbn(book.get_isbn()));
-                history.push_back("Created new book with ISBN " + book.get_isbn() + " - " + book.get_title() + "\n");
+                return;
             }
             else {
-                cout << "Failed to create a new book. Make sure that the ISBN must be unique.\n";
+                continue;
             }
         }
-        else if (3 <= option && option <= 8) {
-            update_book(book_manager, 3, option);
+        else if (option == 1) {
+            system("cls");
+            search_book();
+
+            cout << "Do you want to update a book? (y/n) ";
+            string response = read_input_line();
+            if (response == "y") {
+                update_book();
+            }
         }
-        else if (option == 9) {
+        else if (option == 2) {
+            system("cls");
+            update_book();
+        }
+        else if (option == 3) {
+            system("cls");
+            search_user();
+        }
+        else if (option == 4) {
             display_history();
         }
 
@@ -437,12 +538,53 @@ void admin_main_menu(string file_location) {
     }
 }
 
-void guest_main_menu(string file_location) {
-    cout << "Loading data...\n";
-    BookManager book_manager(file_location);
-
+void user_main_menu(string name) {
     while (true) {
-        search_book(book_manager, false);
+        system("cls");
+        cout << "Welcome " << name << "!\n";
+        cout << "Main menu\n";
+        cout << "1. Search book\n";
+        cout << "2. Borrow or return book\n";
+        cout << "3. View profile and borrowed books\n";
+        cout << "0. Log out\n";
+        cout << "Choose operation to do: ";
+        int option = read_input_integer(0, 3);
+
+        if (option == 0) {
+            cout << "Do you want to log out? (y/n) ";
+            string response = read_input_line();
+            if (response == "y") {
+                return;
+            }
+        }
+        else if (option == 1) {
+            system("cls");
+            search_book();
+
+            cout << "Do you want to borrow or return book? (y/n) ";
+            string response = read_input_line();
+            if (response == "y") {
+                borrow_return_book(name);
+            }
+        }
+        else if (option == 2) {
+            system("cls");
+            borrow_return_book(name);
+        }
+        else if (option == 3) {
+            system("cls");
+            display_user(user_manager.get_user_by_name(name));
+        }
+
+        cout << "Press any key to continue... ";
+        getch();
+    }
+}
+
+void guest_main_menu() {
+    while (true) {
+        system("cls");
+        search_book();
 
         cout << "Do you want to search again? (y/n) ";
         string response = read_input_line();
@@ -453,9 +595,9 @@ void guest_main_menu(string file_location) {
 }
 
 int main() {
-    const string file_location = "books.json";
+    book_manager = BookManager(book_file_path);
+
     while (true) {
-    	landingmenu:
         system("cls");
         cout << "Library Login Page\n";
         cout << "1. Login as admin\n";
@@ -464,16 +606,19 @@ int main() {
         cout << "4. Search book as guest\n";
         cout << "0. Quit\n";
         cout << "Choose operation to do: ";
-        int option = read_input_integer(0, 2);
+        int option = read_input_integer(0, 4);
 
-        if (option == 1) {
+        if (option == 0) {
+            break;
+        }
+        else if (option == 1) {
             cout << "Input username: ";
             string username = read_input_line();
             cout << "Input password: ";
             string password = read_input_line();
 
             if (username == "admin" && password == "admin") {
-                admin_main_menu(file_location);
+                admin_main_menu();
             }
             else {
                 cout << "Wrong username and password!\n";
@@ -481,55 +626,47 @@ int main() {
         }
         else if (option == 2) {
         	cout << "Input username: ";
-        	//func
+        	string username = read_input_line();
         	cout << "Input password: ";
-        	//func
-        	if (user valid) {
-        		//funct search borrow return
+        	string password = read_input_line();
+            
+        	if (user_manager.login_user(username, password)) {
+        		user_main_menu(username);
 			}
 			else {
-				string response;
-				cout << "Wrong or unknown username and password, would you like to register? y/n\n";
-				cin  >> response;
-				if (response=="y") {
+				cout << "Wrong or unknown username and password, would you like to register? (y/n)\n";
+				string response = read_input_line();
+				if (response == "y") {
 					goto regist;
-				}
-				else if (response=="n") {
-					goto landingmenu;
 				}
 			}
 		}
 		else if (option == 3) {
+            regist:
 			string new_user, new_password, phone_num;
 			cout << "Welcome to our Library\n";
-			cout << "Enter username";
-			cin >> new_user;
-			if (username not taken) {
-				//continue
-			}
-			else (username taken) {
-				//go back to menu aja lah
-			}
-			cout << "Enter phone number:";
-			cin >> phone_num;
-			cout << "Enter password";
-			cin >> new_password;
-			//function for password requirement, lenght, character required
-			if (password accepted) {
+			cout << "Enter username: ";
+			new_user = read_input_line();
+			cout << "Enter phone number: ";
+			phone_num = read_input_line();
+			cout << "Enter password: ";
+			new_password = read_input_line();
+			// name and password available
+			if (user_manager.register_user(new_user, new_password, phone_num)) {
 				cout << "Welcome, " << new_user << ". Enjoy your books.";
-				cout << "Press any key to continue...";
-				getch();
 			}
-			else (password not accepted) {
-				cout << "Must be bla bla bla";
-				//back to menu la
+			else {
+				cout << "Failed to register user\n";
 			}
 		}
         else if (option == 4) {
-            guest_main_menu(file_location);
+            guest_main_menu();
         }
 
         cout << "Press any key to continue... \n";
         getch();
     }
+
+    book_manager.save_data(book_file_path);
+    user_manager.save_data(user_file_path);
 }
