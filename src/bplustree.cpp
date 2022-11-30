@@ -101,7 +101,7 @@ vector<V*> BPlusTree<K, V>::get_all_values_helper() const
 	
 	while (current != nullptr)
 	{
-		for (int i = 0, i < current->cnt_key; i++)
+		for (int i = 0; i < current->cnt_key; i++)
 		{
 			result.push_back(current->values[i]);
 		}
@@ -403,10 +403,6 @@ void BPlusTree<K, V>::remove_fix(Node *current, K key) {
     }
 }
 
-template<typename K, typename V>
-vector<V*> BPlusTree<K, V>::get_all_values_helper() const {
-
-}
 
 template<typename K, typename V>
 void BPlusTree<K, V>::print_helper(Node *current, string space) {
@@ -414,7 +410,7 @@ void BPlusTree<K, V>::print_helper(Node *current, string space) {
 }
 
 template<typename K, typename V>
-BPlusTree<K, V>::BPlusTree(int_degree)
+BPlusTree<K, V>::BPlusTree(int _degree)
 {
 	degree = _degree;
 	size = 0;
@@ -422,10 +418,6 @@ BPlusTree<K, V>::BPlusTree(int_degree)
 	root->is_leaf = true;
 }
 
-template<typename K, typename V>
-BPlusTree<K, V>::BPlusTree(int _degree) {
-
-}
 
 template<typename K, typename V>
 int BPlusTree<K, V>::get_size() const 
@@ -473,10 +465,6 @@ bool BPlusTree<K, V>::remove(K key) {
     }
 }
 
-template<typename K, typename V>
-vector<V*> BPlusTree<K, V>::get_all_values() const {
-
-}
 
 template<typename K, typename V>
 void BPlusTree<K, V>::print() {
