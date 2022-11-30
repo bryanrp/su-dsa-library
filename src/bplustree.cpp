@@ -59,8 +59,55 @@ bool BPlusTree<K, V>::is_exist_helper(Node *current, K key) const
 }
 
 template<typename K, typename V>
-V* BPlusTree<K, V>::get_value_helper(Node *current, K key) const {
+V* BPlusTree<K, V>::get_value_helper(Node *current, K key) const 
+{
+	if (current == nullptr)
+	{
+		return nullptr;
+	}
+	
+	if (current->is_leaf)
+	{
+		for (int i=0; i<current->cnt_key; i++)
+		{
+			if (current->keys[i]==key)
+			{
+				return current->values[i];
+			}
+		}
+		return nullptr;
+	}
+	
+	for (int i = 0; i < current->cnt_key; i++)
+	{
+		if (key < current->keys[i])
+		{
+			return get_value_helper(current->children[i], key);
+		}
+	}
+	
+	return get_value_helper(current->children[current->cnt_key], key);
+}
 
+template<typename K, typename V>
+vector<V*> BPlusTree<K, V>::get_all_values_helper() const
+{
+	vector<V*> result;
+	Node *current = root;
+	while (!current->is_leaf)
+	{
+		current = current->children[0];
+	}
+	
+	while (current != nullptr)
+	{
+		for (int i = 0, i < current->cnt_key; i++)
+		{
+			result.push_back(current->values[i]);
+		}
+		current = current->next_leaf;
+	}
+	return result;
 }
 
 // return true if operation successful
@@ -367,6 +414,15 @@ void BPlusTree<K, V>::print_helper(Node *current, string space) {
 }
 
 template<typename K, typename V>
+BPlusTree<K, V>::BPlusTree(int_degree)
+{
+	degree = _degree;
+	size = 0;
+	root = new Node (degree);
+	root->is_leaf = true;
+}
+
+template<typename K, typename V>
 BPlusTree<K, V>::BPlusTree(int _degree) {
 
 }
@@ -387,6 +443,12 @@ template<typename K, typename V>
 V* BPlusTree<K, V>::get_value(K key) const 
 {
 	return get_value_helper(root, key);
+}
+
+template<typename K, typename V>
+vector<V*> BPlusTree<K, V>::get_all_values() const
+{
+	return get_all_values_helper();
 }
 
 template<typename K, typename V>
