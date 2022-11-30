@@ -3,8 +3,6 @@
 #include <fstream>
 #include <sstream>
 #include "../include/user_manager.h"
-#include "bplustree.cpp"
-#include "user.cpp"
 
 UserManager::UserManager(const string &file_location) {
     load_data(file_location);
@@ -41,12 +39,12 @@ vector<User> UserManager::get_all_users() const {
     return user_copy;
 }
 
-bool UserManager::register_user(string name, string password) {
+bool UserManager::register_user(string name, string password, string phone) {
     if (data.is_exist(name)) {
         return false;
     }
     else {
-        return data.insert(name, User(name, password));
+        return data.insert(name, User(name, password, phone));
     }
 }
 
@@ -60,23 +58,16 @@ bool UserManager::login_user(string name, string password) const {
     }
 }
 
-vector<string> UserManager::get_borrowed_books(string name) const {
+bool UserManager::update_user(string name, User user) {
     if (!data.is_exist(name)) {
-        return vector<string>();
+        return false;
     }
     else {
-        User *user = data.get_value(name);
-        if (user == nullptr) {
-            assert(false);
-        }
-        else {
-            list<string> borrowed_books = user->get_borrowed_books();
-            vector<string> result;
-            for (list<string>::iterator it = borrowed_books.begin(); it != borrowed_books.end(); it++) {
-                result.push_back(*it);
-            }
-            return result;
-        }
+        assert(name == user.get_name());
+        User *user_ori = data.get_value(name);
+        user_ori->set_password(user.get_password());
+        user_ori->set_phone(user.get_phone());
+        return true;
     }
 }
 

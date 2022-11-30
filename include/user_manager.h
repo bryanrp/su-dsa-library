@@ -14,10 +14,10 @@ public:
 
     vector<User> get_all_users() const;
 
-    bool register_user(string name, string password);
+    bool register_user(string name, string password, string phone);
     bool login_user(string name, string password) const;
+    bool update_user(string name, User user);
 
-    vector<string> get_borrowed_books(string name) const;
     bool borrow_book(string name, string isbn);
     bool return_book(string name, string isbn);
 };

@@ -1,9 +1,17 @@
 #pragma once
 #include "../include/user.h"
 
-User::User(string _name, string _password) {
+User::User(const User &user) {
+    name = user.name;
+    password = user.password;
+    phone = user.phone;
+    borrowed_books = user.borrowed_books;
+}
+
+User::User(string _name, string _password, string _phone) {
     name = _name;
     password = _password;
+    phone = _phone;
     borrowed_books = list<string>();
 }
 
@@ -19,6 +27,10 @@ string User::get_name() const {
     return name;
 }
 
+string User::get_password() const {
+    return password;
+}
+
 list<string> User::get_borrowed_books() const {
     return borrowed_books;
 }
@@ -32,6 +44,14 @@ json::JSON User::get_json() {
         obj["book"].append(*it);
     }
     return obj;
+}
+
+void User::set_password(string new_password) {
+    password = new_password;
+}
+
+void User::set_phone(string new_phone) {
+    phone = new_phone;
 }
 
 bool User::check_password(string _password) const {
