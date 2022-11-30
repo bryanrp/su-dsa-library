@@ -18,6 +18,7 @@ User::User(string _name, string _password, string _phone) {
 User::User(json::JSON obj) {
     name = obj["name"].ToString();
     password = obj["password"].ToString();
+    phone = obj["phone"].ToString();
     for (int i = 0; i < obj["book"].size(); i++) {
         borrowed_books.push_back(obj["book"][i].ToString());
     }
@@ -31,6 +32,10 @@ string User::get_password() const {
     return password;
 }
 
+string User::get_phone() const {
+    return phone;
+}
+
 list<string> User::get_borrowed_books() const {
     return borrowed_books;
 }
@@ -39,6 +44,7 @@ json::JSON User::get_json() {
     json::JSON obj;
     obj["name"] = name;
     obj["password"] = password;
+    obj["phone"] = phone;
     obj["book"] = json::Array();
     for (list<string>::iterator it = borrowed_books.begin(); it != borrowed_books.end(); it++) {
         obj["book"].append(*it);

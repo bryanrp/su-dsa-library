@@ -3,6 +3,7 @@
 #include <fstream>
 #include <sstream>
 #include "../include/user_manager.h"
+#include "user.cpp"
 
 UserManager::UserManager(const string &file_location) {
     load_data(file_location);
@@ -28,6 +29,15 @@ void UserManager::save_data(const string &file_location) {
     }
     ofstream output(file_location);
     output << obj.dump();
+}
+
+User UserManager::get_user_by_name(string name) const {
+    if (data.is_exist(name)) {
+        return User(*data.get_value(name));
+    }
+    else {
+        return User("", "", "");
+    }
 }
 
 vector<User> UserManager::get_all_users() const {

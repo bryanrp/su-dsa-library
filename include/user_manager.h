@@ -12,6 +12,7 @@ public:
     void load_data(const string &file_location);
     void save_data(const string &file_location);
 
+    User get_user_by_name(string name) const;
     vector<User> get_all_users() const;
 
     bool register_user(string name, string password, string phone);
