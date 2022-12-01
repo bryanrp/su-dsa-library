@@ -1,6 +1,7 @@
 #include <conio.h>
 #include <iomanip>
 #include <iostream>
+#include <limits.h>
 #include <list>
 #include <regex>
 #include <vector>
@@ -211,7 +212,7 @@ void update_book() {
     }
 
     string isbn;
-    while (true) {
+    while (option != 5) {
         const string cancel_operation = "(-1 to cancel operation)";
         if (option == 1) cout << "Input book ISBN to be added stock " + cancel_operation + ": ";
         else if (option == 2) cout << "Input ISBN to be modified " + cancel_operation + ": ";
@@ -595,6 +596,7 @@ void guest_main_menu() {
 }
 
 int main() {
+    cout << "Loading data...\n";
     book_manager = BookManager(book_file_path);
 
     while (true) {
@@ -667,6 +669,7 @@ int main() {
         getch();
     }
 
+    cout << "Saving data...";
     book_manager.save_data(book_file_path);
     user_manager.save_data(user_file_path);
 }
