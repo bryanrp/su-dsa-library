@@ -99,6 +99,12 @@ bool BookManager::update_book(string old_isbn, const Book& book)
 		cout << "An Unexpected Error has Occured.\n";
 		return false;
 	}
+	
+	if (!create_book(book))
+	{
+		cout << "An Unexpected Error has Occured.\n";
+		return false;
+	}
 	return true;
 }
 
